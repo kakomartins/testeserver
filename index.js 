@@ -1,0 +1,58 @@
+const dialogflow = require('dialogflow');
+const uuid = require('uuid');
+const config = require('teste-e1ee4-2917926dc72f.json'); // your JSON file
+
+if(!config.private_key) throw new Error('Private key required')
+if(!config.client_email)throw new Error('Client email required')
+if(!config.project_id) throw new Error('project required')
+
+const credentials = {
+    client_email: config.client_email,
+    private_key: config.private_key,
+};
+
+const sessionClient = new dialogflow.SessionsClient(
+    {
+        projectId: config.project_id,
+        credentials
+    }
+);
+
+async function runSample(projectId = 'br-poaqqc') {
+    // A unique identifier for the given session
+    const sessionId = uuid.v4();
+
+    const sessionPath = sessionClient.sessionPath(config.project_id, sessionId);
+    // The text query request.
+    const request = {
+        session: sessionPath,
+        queryInput: {
+            text: {
+                // The query to send to the dialogflow agent
+                text: 'hi',
+                // The language used by the client (en-US)
+                languageCode: 'en-US',
+            },
+        },
+    };
+    // Send request and log result
+    try {
+        const responses = await sessionClient.detectIntent(request);
+        console.log(responses);
+        console.log('Detected intent');
+        const result = responses[0].queryResult;
+        console.log(`  Query: ${result.queryText}`);
+        console.log(`  Response: ${result.fulfillmentText}`);
+        if (result.intent) {
+            console.log(`  Intent: ${result.intent.displayName}`);
+        } else {
+            console.log(`  No intent matched.`);
+        }
+    } catch (err) {
+        console.log('Error getting response', err)
+    }
+
+}
+
+    
+ runSample();
